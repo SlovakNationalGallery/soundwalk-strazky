@@ -1,0 +1,32 @@
+[
+   {
+      "audio": "EXT_1_INTRO.mp3",
+      "name": "Intro",
+      "order": 1
+   },
+   {
+      "audio": "EXT_2_SOCHY.mp3",
+      "name": "Sochy42",
+      "order": 2
+   },
+   {
+      "audio": "EXT_3_BALKON.mp3",
+      "name": "Balkón",
+      "order": 3
+   },
+   {
+      "audio": "EXT_4_STIMMUNGY.mp3",
+      "name": "Stimmungy",
+      "order": 4
+   },
+   {
+      "audio": "EXT_5_STROMY.mp3",
+      "name": "Stromy",
+      "order": 5
+   },
+   {
+      "audio": "EXT_6_RODINNA HROBKA.mp3",
+      "name": "Rodinná hrobka",
+      "order": 6
+   }
+]

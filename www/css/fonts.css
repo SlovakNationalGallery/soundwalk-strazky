@@ -1,0 +1,29 @@
+@font-face {
+    font-family: 'Fugue';
+    src: url('fonts/fugue_regular-webfont.eot');
+    src: url('fonts/fugue_regular-webfont.eot?#iefix') format('embedded-opentype'),
+         url('fonts/fugue_regular-webfont.woff') format('woff'),
+         url('fonts/fugue_regular-webfont.ttf') format('truetype'),
+         url('fonts/fugue_regular-webfont.svg#fugueregular') format('svg');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+  font-family: "Flat-UI-Icons-24";
+  font-weight: normal;
+  font-style: normal;
+  src: url("fonts/Flat-UI-Icons-24.woff") format("woff"),
+    url(fonts/Flat-UI-Icons-24.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'icomoon';
+  src:url('fonts/icomoon.eot');
+  src:url('fonts/icomoon.eot?#iefix') format('embedded-opentype'),
+    url('fonts/icomoon.woff') format('woff'),
+    url('fonts/icomoon.ttf') format('truetype'),
+    url('fonts/icomoon.svg#icomoon') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}

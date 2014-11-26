@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1, width=device-width, user-scalable=no" />
+    <title>SoundWalk Strážky</title>
+
+
+
+    <link rel="stylesheet" href="css/fonts.css" />
+    <link rel="stylesheet"  href="css/themes/strazky/jquery.mobile.custom.structure.min.css">
+    <link rel="stylesheet"  href="css/themes/strazky/jquery.mobile.custom.theme.min.css">
+    <!-- <link rel="stylesheet"  href="css/themes/strazky/jquery.mobile-1.4.0-rc.1.min.css"> -->
+    <!-- <link rel="stylesheet"  href="css/themes/strazky/jquery.mobile.theme-1.4.0-rc.1.min.css"> -->
+    <link rel="stylesheet" href="css/style.css" />
+
+    <script src="cordova.js"></script>
+    <script src="js/jquery.min.js"></script>
+    <!-- // <script src="js/jquery.mobile-1.4.0-rc.1.min.js"></script> -->
+    <script src="js/jquery.mobile.custom.min.js"></script>
+
+
+    <!-- // <script src="js/jquery.min.js"></script> -->
+    <!-- // <script src="js/jquery.mobile-1.3.1.min.js"></script> -->
+
+    <script src="js/utility.js"></script>
+    <script src="js/player.js"></script>
+
+    <script type="text/javascript">
+
+    $(document).ready(function() {
+      document.addEventListener("deviceready", onDeviceReady, true);
+      // onDeviceReady(); //only for debuging
+    });
+     
+    var audioMedia = null,
+        audioTimer = null,
+        duration = -1,
+        is_paused = false;
+     
+    function onDeviceReady() {
+        var uzPulzoval = false;
+
+        if(navigator.userAgent.match(/iP[ha][od].*OS 7/)) { //if ios7
+          $('.ui-btn-left, .ui-btn-right ').css('top','.48em');
+        }
+
+        createList("exterier.json", "#exterier-list");
+        createList("interier.json", "#interier-list");
+        $("#exterier-list, #interier-list").collapsibleset();
+
+        $("#button-mednansky").click(
+          function(event) {
+            if ($(this).hasClass("active")) {
+              $('.intro-nadpis').fadeTo('normal', 1);
+              $('#menu').addClass('schovane');
+              $('#button-mednansky').removeClass('active');
+            } else {
+              $('.intro-nadpis').fadeTo('normal', 0);
+              $('#menu').removeClass('schovane');
+              $('#button-mednansky').addClass('active');
+            }
+            // $('.menu-item').hide();
+            event.stopPropagation();
+          }
+        );
+
+        // pulzovanie po spusteni
+        if (!uzPulzoval) {
+          $('#button-mednansky')
+                .addClass("active")
+                .delay(400).queue(function(next){
+                    $(this).removeClass("active");
+                    next();
+                });
+          uzPulzoval = true;          
+        }
+
+        $("#exterier-list-page").bind("pageinit", function(event) {
+          $("#interier-list a, #exterier-list a").removeClass("ui-btn-icon-left");
+          $('.ui-nosvg .mapka .circle').removeClass("active");
+        });
+
+
+        $("#interier-list-page").bind("pageinit", function(event) {
+          $("#interier-list a, #exterier-list a").removeClass("ui-btn-icon-left");
+          $('.ui-nosvg .mapka .circle').removeClass("active");
+        });
+
+
+      $(document).on('click', '.player-play', function () { Player.playPause(); })
+      $(document).on('slidestop', '.time-slider', function (event) { Player.seekPosition(event.target.value); })
+
+      $(document).on('click', ".external", function (e) {
+             e.preventDefault();
+             var targetURL = $(this).attr("href");
+             
+             window.open(targetURL, "_system");
+       });
+
+
+      $(document).on('collapsibleexpand', '.ui-collapsible', function() {
+          $(this).children().next().slideDown(200);
+          var index = $(this).find('.index').html();
+          $('.mapka circle').attr("class", "");
+          $('.mapka circle#zastavka'+index).attr("class", "active");
+          // verzia bez SVG
+          $('.ui-nosvg .mapka .circle').removeClass("active");
+          $('.ui-nosvg .mapka .circle#zastavka'+index).addClass("active");
+          if ($(this).parent().attr("id") == 'interier-list') {
+            if (index==1 || index==8) {
+              $('#kastiel1').show('slow');
+              $('.mapka').removeClass('poschodie2');
+            } else {
+              $('#kastiel1').hide('slow');
+              $('.mapka').addClass('poschodie2');
+            }
+          }
+          $(".slider").slider('refresh');
+          initPlayer($(this));
+          // Player.playPause(); 
+      })
+
+      $(document).on('collapsiblecollapse', '.ui-collapsible', function() {
+          $(this).children().next().slideUp(200);
+      });
+
+    };
+
+    function createList(sourceFile, listId) {
+        $.getJSON(sourceFile, function(data) {         
+          $.each(data, function(index, zastavka){
+            var listItem = '';
+            listItem += '<div data-role="collapsible" class="track" rel="'+zastavka.audio+'">' + 
+                '<h3>'+zastavka.name+'<span class="index">'+(index+1)+'</span></h3>' +
+                '<div class="center-wrapper negative-margin">'+
+                  '<a href="#" class="player-play"><span class="icon-play"></span></a>'+
+                  '<div>'+
+                    '<label class="media-played">00:00</label><label class="media-duration">00:00</label><br />'+
+                    '<input type="range" class="time-slider" value="0" min="0" max="100" data-role="none" data-highlight="true" data-mini="true" />'+
+                  '</div>'+
+                '</div>'+
+            '</div>';
+            $(listId).append(listItem);
+          });
+
+          $(listId + " .time-slider" ).slider();
+          // $(listId + " .time-slider").trigger('create'); //pozor!
+          $(listId).collapsibleset( "refresh" );
+
+          // $(listId).on('collapsibleexpand', function () {
+          //     alert('Expanded');
+          // }).on('collapsiblecollapse', function () {
+          //     alert('Collapsed');
+          // });
+
+          $("#interier-list a, #exterier-list a").removeClass("ui-btn-icon-left");
+
+        });
+
+    }
+
+    function initPlayer(thePlayer) {
+      Player.stop();
+
+      var root_path = "/";
+      if (device.platform == "Android") {
+          root_path = "/android_asset/www/";
+      }
+      // var soundfile = root_path + 'sounds/' + $(thePlayer).attr('rel');
+      var soundfile = root_path + 'sounds/' + $(thePlayer).attr('rel');
+      // console.log();
+
+      Player.initMedia(soundfile);
+    };
+    function closePlayer() {
+      Player.stop();
+    };
+
+    </script>
+  </head>
+  <body>
+      <div id="home-page" data-role="page">
+         <!-- <div data-role="main"> -->
+            <!-- <div class="right sng_padding"><span class="icon-sng bigger"></span></div> -->
+            <div class="logo ui-btn-right"><span class="icon-sng"></span></div>
+            
+            <div class="center-wrapper intro-screen">
+                <h1 class="intro-nadpis">Strážky</h1>
+                <h2 class="intro-nadpis">SoundWalk</h2>
+                <div id="menu-container">
+                    <div id="menu"  class="schovane">
+                      <a href="#exterier-list-page" class="menu-item grey" id="exterier" data-transition="slidedown">Park</a>
+                      <a href="#interier-list-page" class="menu-item grey" id="interier" data-transition="slideup">Kaštieľ</a>
+                      <a href="#info-page" class="menu-item horizontal" id="info" data-transition="slide"><span class="icon-question"></span></a>
+                      <a href="#contact-page" class="menu-item horizontal" id="contact" data-transition="slide"><span class="icon-contact"></span></a>
+                    </div>                  
+                    <a id="button-mednansky">
+                      <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                         width="120px" height="120px" viewBox="0 0 120 120" enable-background="new 0 0 120 120" xml:space="preserve">
+                      <g>
+                        <circle opacity="0.3" fill="#00C762" cx="60" cy="60" r="59.333" id="mednansky-circle" />
+                        <polygon fill="#F4F4F4" points="79.06,66.577 76.013,97.414 60.681,107.771 45.172,97.414 42.145,66.577 60.624,76.83  "/>
+                        <polygon fill="#181815" points="79.136,56.761 82.651,17.716 36.98,17.716 40.761,56.64 29.643,54.607 30.59,61.426 89.771,61.426 
+                          90.716,54.607   "/>
+                        <polygon fill="#00f087" points="60,52.52 48.577,52.52 48.577,32.913 51.987,32.913 51.987,49.11 60,49.11   "/>
+                        <polygon fill="#00f087" points="50.218,87.041 55.454,82.692 60.628,85.899 65.802,82.692 71.028,87.034 74.212,85.246 
+                          66.095,78.501 60.628,81.888 55.163,78.501 47.035,85.254   "/>
+                      </g>
+                      </svg>
+                    </a>
+                </div>
+                <h3 class="intro-nadpis">
+                  Ladislav<br>
+                  Mednyánszky<br>
+                  1852 — 1919
+                </h3>                
+            </div>
+         <!-- </div> -->
+      </div>   
+
+    <!-- PAGE INTERIER LIST -->
+    <div id="interier-list-page" data-role="page">
+         <header data-role="header" data-position="fixed" data-tap-toggle="false">
+            <div class="mapka">
+              <!-- fallback pre no-svg -->
+              <div class="circle" id="zastavka1"></div>
+              <div class="circle" id="zastavka2"></div>
+              <div class="circle" id="zastavka3"></div>
+              <div class="circle" id="zastavka4"></div>
+              <div class="circle" id="zastavka5"></div>
+              <div class="circle" id="zastavka6"></div>
+              <div class="circle" id="zastavka7"></div>
+              <div class="circle" id="zastavka8"></div>
+              <!-- <img src="images/park.svg" alt="park" width="100%" /> -->
+<div class="svg-wrap">
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+   width="524.264px" height="307.6px" viewBox="0 0 524.264 307.6" enable-background="new 0 0 524.264 307.6" xml:space="preserve">
+<g id="kastiel2">
+  <polyline fill="#FFFFFF" points="20.129,278.626 34.033,278.626 34.033,292.53 47.937,292.53 47.937,306.434 
+    0,306.85 0,264.724 20.129,264.724 20.129,278.626 34.033,278.626 34.033,292.53   "/>
+  
+    <text transform="matrix(1 0 0 1 4.6611 303.1543)" fill="#006531" font-family="'Fugue'" font-size="27.6503">2</text>
+  <path fill="#FFFFFF" d="M389.122,21.633c-12.557,0-22.734,10.179-22.734,22.735H334.59v-25.12h-34.336v25.12
+    H173.758v153.455h-52.767v47.006h26.805v3.07c0,12.557,10.179,22.734,22.735,22.734c12.556,0,22.735-10.18,22.735-22.734
+    c0-0.883-0.056-1.754-0.154-2.611v-0.459v-3.223h177.884V58.088c4.149,5.476,10.724,9.015,18.125,9.015
+    c12.557,0,22.734-10.179,22.734-22.735C411.857,31.812,401.679,21.633,389.122,21.633z"/>
+  <circle fill="#006531" cx="204.634" cy="65.025" r="8.295" id="zastavka2"/>
+  <circle fill="#006531" cx="389.634" cy="44.435" r="8.295" id="zastavka3"/>
+  <circle fill="#006531" cx="347.437" cy="113.951" r="8.295" id="zastavka4"/>
+  <circle fill="#006531" cx="347.437" cy="153.8" r="8.295" id="zastavka5"/>
+  <circle fill="#006531" cx="347.437" cy="206.042" r="8.295" id="zastavka6"/>
+  <circle fill="#006531" cx="204.634" cy="113.952" r="8.295" id="zastavka7"/>
+  
+    <line fill="none" stroke="#969D93" stroke-width="7" stroke-linejoin="round" stroke-miterlimit="10" x1="308.259" y1="132.364" x2="326.692" y2="132.364"/>
+  
+    <line fill="none" stroke="#969D93" stroke-width="7" stroke-linejoin="round" stroke-miterlimit="10" x1="308.259" y1="123.158" x2="326.692" y2="123.158"/>
+  
+    <line fill="none" stroke="#969D93" stroke-width="7" stroke-linejoin="round" stroke-miterlimit="10" x1="308.259" y1="113.952" x2="326.692" y2="113.952"/>
+  
+    <line fill="none" stroke="#969D93" stroke-width="7" stroke-linejoin="round" stroke-miterlimit="10" x1="308.259" y1="104.746" x2="326.692" y2="104.746"/>
+  <g>
+    <path fill="#969D93" d="M227.665,209.269h-6.271v-6.453h6.271V209.269z"/>
+  </g>
+  <g>
+    <path fill="#969D93" d="M265.294,209.269h-6.271v-6.453h6.271V209.269z"/>
+  </g>
+  <g>
+    <path fill="#969D93" d="M190.496,172.463h-6.452v-6.162h6.452V172.463z M190.496,135.488h-6.452v-6.163h6.452V135.488z"/>
+  </g>
+  <rect x="184.044" y="203.104" fill="#969D93" width="6.452" height="6.162"/>
+  <rect x="296.19" y="203.104" fill="#969D93" width="6.451" height="6.162"/>
+  <g>
+    <path fill="#969D93" d="M265.294,98.974h-6.271v-6.452h6.271V98.974z M227.665,98.974h-6.271v-6.452h6.271V98.974z"/>
+  </g>
+  <rect x="296.19" y="166.302" fill="#969D93" width="6.451" height="6.162"/>
+  <rect x="296.19" y="129.326" fill="#969D93" width="6.451" height="6.163"/>
+  <rect x="296.19" y="92.811" fill="#969D93" width="6.451" height="6.163"/>
+  <rect x="184.044" y="92.811" fill="#969D93" width="6.452" height="6.163"/>
+</g>
+<g id="kastiel1">
+  <path fill="#FFFFFF" d="M389.978,21.8c-12.642,0-22.891,10.149-22.891,22.668h-32.016V19.422h-34.569v25.046h-127.36V197.47
+    h-42.081l-15.046-14.9l-12.514,12.393l16.515,16.354v19.179l-16.515,16.354l12.514,12.391l15.046-14.897h15.942v3.062
+    c0,12.521,10.248,22.671,22.89,22.671s22.89-10.15,22.89-22.671c0-0.881-0.056-1.747-0.155-2.604v-0.455v-3.214h179.1V58.147
+    c4.181,5.46,10.797,8.988,18.248,8.988c12.644,0,22.893-10.148,22.893-22.667C412.867,31.949,402.618,21.8,389.978,21.8z"/>
+  <circle id="zastavka1" fill="#006531" cx="204.229" cy="65.063" r="8.295"/>
+  <circle id="zastavka8" fill="#006531" cx="224.335" cy="161.285" r="8.295"/>
+  
+    <line fill="none" stroke="#969D93" stroke-width="7" stroke-linejoin="round" stroke-miterlimit="10" x1="344.729" y1="123.034" x2="344.729" y2="104.655"/>
+  
+    <line fill="none" stroke="#969D93" stroke-width="7" stroke-linejoin="round" stroke-miterlimit="10" x1="307.655" y1="104.655" x2="307.655" y2="123.034"/>
+  
+    <line fill="none" stroke="#969D93" stroke-width="7" stroke-linejoin="round" stroke-miterlimit="10" x1="316.924" y1="104.655" x2="316.924" y2="123.034"/>
+  
+    <line fill="none" stroke="#969D93" stroke-width="7" stroke-linejoin="round" stroke-miterlimit="10" x1="326.19" y1="104.655" x2="326.19" y2="123.034"/>
+  
+    <line fill="none" stroke="#969D93" stroke-width="7" stroke-linejoin="round" stroke-miterlimit="10" x1="335.46" y1="104.655" x2="335.46" y2="123.034"/>
+  <g>
+    <path fill="#00f087" d="M247.377,223.335l-5.102-4.041l17.006-20.209h6.12l17.008,20.209l-5.102,4.041l-11.227-14.482
+      l-0.682-1.146v47.962h-6.122v-47.962l-0.68,1.146L247.377,223.335z"/>
+  </g>
+  <g>
+    <path fill="#969D93" d="M227.417,208.88h-6.315v-6.434h6.315V208.88z"/>
+  </g>
+  <g>
+    <path fill="#969D93" d="M265.304,98.911h-6.313v-6.432h6.313V98.911z M227.417,98.911h-6.315v-6.432h6.315V98.911z"/>
+  </g>
+  <rect x="183.499" y="202.735" fill="#969D93" width="6.496" height="6.145"/>
+  <rect x="296.41" y="202.735" fill="#969D93" width="6.497" height="6.145"/>
+  <g>
+    <path fill="#969D93" d="M265.304,98.911h-6.313v-6.432h6.313V98.911z M227.417,98.911h-6.315v-6.432h6.315V98.911z"/>
+  </g>
+  <rect x="296.41" y="166.041" fill="#969D93" width="6.497" height="6.144"/>
+  <rect x="296.41" y="129.174" fill="#969D93" width="6.497" height="6.145"/>
+  <rect x="296.41" y="92.767" fill="#969D93" width="6.497" height="6.144"/>
+  <rect x="183.499" y="92.767" fill="#969D93" width="6.496" height="6.144"/>
+  <text transform="matrix(1.0098 0 0 1 311.4277 69.9648)" fill="#006531" font-family="'Fugue'" font-size="20.217">Kasa</text>
+  <polyline fill="#FFFFFF" points="19.847,279.032 33.555,279.032 33.555,292.896 47.265,292.896 47.265,306.759 0,307.174 
+    0,265.171 19.847,265.171 19.847,279.032 33.555,279.032 33.555,292.896   "/>
+  <text transform="matrix(1.0098 0 0 1 3.6924 303.4883)" fill="#006531" font-family="'Fugue'" font-size="27.5686">1</text>
+</g>
+</svg>
+</div>
+
+              <h1>Kaštieľ</h1>
+    
+            </div>
+            <a href="#" data-icon="arrow-l"  data-rel="back" title="Go back" class="back ui-btn-left" data-transition="slidedown">Späť</a>
+            <div class="logo ui-btn-right"><span class="icon-sng"></span></div>
+         </header>
+         <div data-role="main" class="ui-content">
+            <div data-role="collapsible-set"  data-inset="false" id="interier-list"></div>
+         </div>
+     </div>
+
+    <!-- PAGE EXTERIER LIST -->
+    <div id="exterier-list-page" data-role="page">
+        <header data-role="header" data-position="fixed" data-tap-toggle="false">
+            <div class="mapka">
+              <!-- fallback pre no-svg -->
+              <div class="circle" id="zastavka1"></div>
+              <div class="circle" id="zastavka2"></div>
+              <div class="circle" id="zastavka3"></div>
+              <div class="circle" id="zastavka4"></div>
+              <div class="circle" id="zastavka5"></div>
+              <div class="circle" id="zastavka6"></div>
+
+              <!-- <img src="images/park.svg" alt="park" width="100%" /> -->
+<div class="svg-wrap">
+<svg version="1.1" id="park_podorys2" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+   viewBox="0 0 524.264 307.6" xml:space="preserve">
+<path fill="none" stroke="#F2FDFF" stroke-width="14.2254" stroke-miterlimit="10" d="M225.405,126.583"/>
+<path fill="none" stroke="#5D5D5D" stroke-width="18.6024" stroke-miterlimit="10" d="M225.405,126.583"/>
+<g>
+  <g>
+    <path fill="#FFFFFF" d="M169.876,277.257c-2.108,0.001-4.282-0.151-6.459-0.452c-5.156-0.71-9.545-1.923-14.191-3.206
+      c-5.669-1.566-12.095-3.342-21.597-4.65c-3.856-0.532-8.206-0.802-12.928-0.802c-14.752,0-31.71,2.617-46.671,4.927
+      c-13.274,2.049-25.813,3.983-35.61,3.983c-2.758,0-5.169-0.147-7.37-0.451c-10.733-1.479-16.603-7.068-19.638-11.496
+      c-3.602-5.256-5.187-11.756-4.348-17.833c2.978-21.616,32.325-46.763,89.719-76.879c9.647-5.062,20.393-13.477,33.998-24.13
+      c25.438-19.919,60.275-47.199,112.728-70.654c11.753-5.256,24.025-9.574,34.853-13.383c10.46-3.68,20.339-7.156,27.671-10.746
+      c3.696-1.811,8.343-4.62,13.262-7.595c14.246-8.615,31.975-19.337,47.975-19.337c1.563,0,3.104,0.103,4.578,0.306
+      c12.874,1.773,19.214,8.986,22.265,14.725c3.417,6.426,4.643,14.719,3.452,23.351c-1.246,9.055-3.199,15.98-4.922,22.09
+      c-1.217,4.313-2.268,8.039-2.741,11.486c-1.974,14.303-29.789,25.451-68.87,39.639c-10.305,3.741-19.204,6.972-23.581,9.203
+      c-7.17,3.654-11.351,8.863-16.644,15.458c-5.521,6.878-12.391,15.438-24.568,24.135c-1.604,1.146-3.415,2.356-5.331,3.639
+      c-9.98,6.676-23.648,15.819-29.326,29.817c-2.939,7.244-3.573,11.856-4.187,16.317l-0.055,0.399
+      C207.758,261.107,191.87,277.256,169.876,277.257z M114.701,256.146c5.269,0,10.169,0.308,14.566,0.914
+      c10.291,1.417,17.125,3.306,23.154,4.971c4.436,1.226,8.268,2.284,12.635,2.887c1.636,0.226,3.258,0.34,4.82,0.339
+      c16.013-0.001,26.793-11.584,29.576-31.779l0.054-0.395c0.646-4.705,1.452-10.561,4.955-19.194
+      c7.062-17.413,23.137-28.165,33.773-35.281c1.837-1.229,3.573-2.39,5.028-3.429c10.831-7.735,16.863-15.251,22.185-21.882
+      c5.701-7.104,11.087-13.813,20.553-18.637c5.036-2.567,14.258-5.915,24.936-9.791c13.562-4.923,28.933-10.503,41.376-16.396
+      c18.854-8.928,19.675-13.414,19.701-13.6c0.587-4.268,1.798-8.561,3.079-13.105c1.617-5.735,3.45-12.236,4.584-20.471
+      c0.849-6.153,0.082-11.864-2.16-16.08c-2.562-4.819-6.915-7.59-13.308-8.471c-0.935-0.129-1.923-0.194-2.939-0.194
+      c-12.653,0-28.795,9.762-41.765,17.605c-5.152,3.117-10.02,6.06-14.194,8.104c-7.963,3.9-18.165,7.489-28.965,11.289
+      c-11.128,3.915-22.635,7.963-33.937,13.018c-51.111,22.855-85.279,49.611-110.229,69.148
+      c-14.084,11.029-25.209,19.741-35.821,25.308c-69.453,36.444-82.068,58.179-83.406,67.892c-0.429,3.111,0.453,6.629,2.359,9.411
+      c2.422,3.534,6.25,5.686,11.377,6.393c1.63,0.225,3.558,0.338,5.731,0.338c8.876,0,20.973-1.867,33.78-3.844
+      C81.587,258.839,99.027,256.146,114.701,256.146z"/>
+  </g>
+  <g>
+    <path fill="#FFFFFF" d="M282.109,141.904c-0.356-0.491-8.687-12.265-5.815-33.083c1.266-9.188,4.457-17.458,7.544-25.454
+      c2.88-7.462,5.601-14.51,6.61-21.831l11.887,1.64c-1.199,8.701-4.302,16.739-7.302,24.512c-2.971,7.696-5.776,14.965-6.853,22.772
+      c-2.171,15.745,3.444,24.108,3.684,24.457L282.109,141.904z"/>
+  </g>
+</g>
+<circle fill="#006531" stroke="#00f087" stroke-width="2" stroke-miterlimit="10" cx="305.333" cy="15.369" r="11" id="zastavka1"  />
+<circle fill="#006531" stroke="#00f087" stroke-width="2" stroke-miterlimit="10" cx="327.876" cy="42.506" r="11" id="zastavka2"/>
+<circle fill="#006531" stroke="#00f087" stroke-width="2" stroke-miterlimit="10" cx="281.688" cy="103.968" r="11" id="zastavka3"/>
+<circle fill="#006531" stroke="#00f087" stroke-width="2" stroke-miterlimit="10" cx="270.688" cy="197.43" r="11" id="zastavka4"/>
+<circle fill="#006531" stroke="#00f087" stroke-width="2" stroke-miterlimit="10" cx="148.667" cy="216.145" r="11" id="zastavka5" />
+<circle fill="#006531" stroke="#00f087" stroke-width="2" stroke-miterlimit="10" cx="149.667" cy="93.968" r="11" id="zastavka6"/>
+<polygon fill="#FFFFFF" points="262.078,8.591 262.078,13.037 257.635,13.037 257.635,8.591 252.967,8.591 252.967,26.369 
+  240.523,26.369 240.523,8.591 235.855,8.591 235.855,13.037 231.412,13.037 231.412,8.591 226.745,8.591 226.745,44.146 
+  266.745,44.146 266.745,8.591 "/>
+<!-- <circle fill="#E52351" stroke="#00f087" stroke-width="2" stroke-miterlimit="10" cx="270.688" cy="197.43" r="21.745"/> -->
+<line fill="none" stroke="#2D3C27" stroke-width="6" stroke-miterlimit="10" x1="117" y1="67" x2="117" y2="97"/>
+<line fill="none" stroke="#2D3C27" stroke-width="6" stroke-miterlimit="10" x1="107" y1="77" x2="127" y2="77"/>
+<path fill="#00A6D8" d="M524.264,122.144c-52.028,1.249-95.22,10.917-131.729,29.462c-57.909,29.414-96.649,80.337-115.145,151.353
+  l-1.208,4.641h41.397c26.686-94.697,94.408-142.373,206.684-145.438V122.144z"/>
+</svg></div>
+
+              <h1>ParkX</h1>
+    
+            </div>
+            <a href="#" data-icon="arrow-l"  data-rel="back" title="Go back" class="back ui-btn-left">Späť</a>
+            <div class="logo ui-btn-right"><span class="icon-sng"></span></div>
+        </header>
+        <div data-role="main" class="ui-content" >
+            <div data-role="collapsible-set"  data-inset="false" id="exterier-list"></div>
+        </div>
+    </div>
+
+    <!-- PAGE ABOUT -->
+
+
+      <div id="info-page" data-role="page">
+         <header data-role="header" data-position="fixed" data-tap-toggle="false">
+            <a href="#" data-icon="arrow-l"  data-rel="back" title="Go back" class="back ui-btn-left"  ="#" data-icon="arrow-l"  data-rel="back" title="Go back" class="back ui-btn-left" data-transition="slide" data-direction="reverse">Späť</a>
+            <div class="logo ui-btn-right"><span class="icon-sng"></span></div>
+            <h1>&nbsp;</h1>
+         </header>
+         <div data-role="main">
+              <div class="ui-content">
+                  <h2>Info</h2>
+                  <p>
+                     Soudwalk Strážky je aplikácia pre mobilné zariadenia, ktorá vás Kaštieľom Strážky prevedie prostredníctvom krátkych audio-príbehov. Ožijú v nich postavy významných obyvateľov kaštieľa  &mdash; „čudáckeho“ maliara Ladislava Mednyánszkeho, jeho príbuznej a poslednej pamätníčky starých čias, barónky Margity Czóbelovej. 
+                  </p>
+                  <p>V príbehoch sa realita prelína s fikciou: na prízemí kaštieľa sa pred vami pohádajú postavy z portrétnej galérie, v parku sa od sôch dozviete o zakázanej láske Medyánszkeho. Jeho peripetie na vojenskom fronte vám prerozprávajú stromy v parku a život barónky priblíži jej opatrovateľka, pani Mária Milistenferová zo Strážok.</p>
+                  <p>Zvuky sprevádzajúce príbehy boli zaznamenané v priestoroch kaštieľa a v jeho bezprostrednom okolí. Na niektorých zastávkach „ozvučujú“ obraz alebo pohľad z okna, v iných dotvárajú atmosféru prostredia. Sú rovnako dôležité ako postavy a ich príbehy, pre najlepší zážitok odporúčame zapožičať si v kaštieli kvalitné slúchadlá.  </p>
+                  <p>Zastávky sú rozdelené na dve časti. V parku sa nechajte viesť rozprávačmi príbehov a jednoduchou mapkou, v kaštieli vám pri orientácii pomôže lektor. Príbehy z parku sú dostupné pre všetkých, príbehy z kaštieľa len pre platiacich návštevníkov.</p>
+              </div>
+              <div class="ui-content green-panel">    
+                  <h2>O aplikácií</h2>
+                  <div class="center-wrapper">
+                      <p class="label">Koncepcia</p><p class="cast"> Katarína Fitková <br> Jonathan Prior</p>
+                      <p class="label">Produkcia</p><p class="cast"> Barbora Jurinová <br> Michal Čudrnák </p>
+                      <p class="label">Scenár</p><p class="cast"> Katarína Fitková</p>
+                      <p class="label">Nahrávky, zvukový dizajn</p><p class="cast"> Jonathan Prior <br><small>(<a href="http://12gatestothecity.com/" class="external">12gatestothecity.com</a>)</small></p>
+                      <p class="label">Vývoj aplikácie</p><p class="cast"> Igor Rjabinin </p>
+                      <p class="label">Grafický dizajn</p><p class="cast"> Braňo Matis </p>
+                      <p class="label">Odborná spolupráca</p><p class="cast"> Katarína Beňová<br /> Mária Šelepová</p>
+                      <p class="label">Herci</p><p class="cast"> Helena Čertíková<br />
+                        Miriam Kalinková<br />
+                        František Kovár<br />
+                        Dušan Szabó
+                      </p>
+                      <p class="label">Majster zvuku <br> (štúdiové nahrávky hercov)</p><p class="cast"> Ladislav Borš</p>
+                      <p class="label">Špeciálne poďakovanie</p><p class="cast"> Mária Milistenferová<br>
+                        <small>(opatrovateľka Margity Czóbelovej)</small></p>
+                      <p class="label">Video upútavka</p><p class="cast"> Anton Kajan </p>
+                      <p class="label">Video upútavka - hudba</p><p class="cast"> Josh Woodward - Already There<br/><small>(Creative Commons BY 3.0)</small></p>
+                      <p class="label">Zvukové nahrávky</p><p class="cast"> <a href="http://bit.ly/1aKcBJi" class="external">archive.org</a> <br/><small>(Creative Commons BY-NC-SA 3.0)</small></p>
+                      <p class="label">Zdrojový kód</p><p class="cast"><a href="http://lab.sng.sk/" class="external">lab_SNG</a></p>
+                  
+                      <p>V aplikácii boli použité archívne materiály z Národného filmového archívu Slovenského filmového ústavu v Bratislave <br>(Muž, ktorý luže - 1968, r. A.Robbe-Grillet)</p>
+                  </div>
+              </div>
+         </div>
+      </div>
+
+
+    <!-- PAGE CONTACT -->
+
+
+      <div id="contact-page" data-role="page">
+         <header data-role="header" data-position="fixed" data-tap-toggle="false">
+            <a href="#" data-icon="arrow-l"  data-rel="back" title="Go back" class="back ui-btn-left" data-transition="slide" data-direction="reverse" >Späť</a>
+            <div class="logo ui-btn-right"><span class="icon-sng"></span></div>
+            <h1>&nbsp;</h1>
+         </header>
+         <div data-role="main">
+            <div class="ui-content">
+              <h2>Otváracie hodiny</h2>
+              <div class="contact-item">
+                 <p>Denne 10.00 – 18.00</p> 
+                 <p>V zimnom období (16. 9. – 14. 6.)<br>
+                    Streda – nedeľa 10.00 – 17.00</p>
+              </div>
+              <h2>Kontakt</h2>
+              <div class="contact-item">
+                <span class="icon-contact contact-icon"></span>
+                <div class="contact-content">
+                  SNG – Kaštieľ Strážky<br>
+                  Mednyánszkeho 25<br>
+                  059 01 Spišská Belá<br>
+                  <!-- <a href="maps:Kaštiel+Strážky%2C+Ladislava+Medňanského%2C+Spišská+Belá%2C+Slovenská+republika">zobraziť mapu <span class="icon-arrow-right"></span></a> -->
+                  <a href="http://maps.google.com/?q=Ka%C5%A1tiel+Str%C3%A1%C5%BEky,+Ladislava+Med%C5%88ansk%C3%A9ho,+Spi%C5%A1sk%C3%A1+Bel%C3%A1,+Slovensk%C3%A1+republika&amp;ll=49.172558,20.456028&amp;spn=0.016217,0.029311&amp;sll=37.06250000000001,-95.67706800000003&amp;sspn=50.415107642905134,102.22236270375726" class="external">zobraziť mapu <span class="icon-arrow-right"></span></a>
+                </div>
+                <!-- <a href="index.html" data-role="button"   data-icon="arrow-r" data-iconpos="right">Zobraziť na mape</a> -->
+              </div>
+              <div class="contact-item">
+                <span class="icon-phone contact-icon"></span>
+                <div class="contact-content">
+                  00-421-52-45 81 312<br>
+                  <a href="tel:+421524581312">zavolať <span class="icon-arrow-right"></span></a>
+ 
+                  <!-- <a href="index.html" data-role="button" data-inline="true" >Zavolať <span class="icon-arrow-right"></span></a> -->
+                </div>
+                
+              </div>
+              <div class="contact-item">
+                <span class="icon-mail contact-icon"></span>
+                <div class="contact-content">
+                  <a href="mailto:strazky@sng.sk">strazky@sng.sk</a>
+                </div>
+              </div>
+              <div class="contact-item">
+                <span class="contact-icon"></span>
+                <div class="contact-content">
+                  <a href="http://www.sng.sk/sk/uvod/vysunute-pracoviska/strazky" class="external">www.sng.sk</a>
+                </div>
+              </div>
+              <div class="contact-item">
+                <span class="contact-icon"></span>
+                <div class="contact-content">
+                  <a href="http://www.facebook.com/pages/SNG-Kaštieľ-Strážky/392651784106507" class="external">facebook</a>
+                </div>
+              </div>
+            </div>
+
+            <div class="ui-content green-panel">
+              <!-- <hr /> -->
+                <h2>O kaštieli</h2>
+                <p>Slovenská národná galéria získala objekt Kaštieľa Strážky do správy v roku 1972 prevodom po smrti bývalej majiteľky, barónky Margity Czóbelovej. V kaštieli sa realizovala rekonštrukcia aj revitalizácia anglického parku z 19. storočia, kde je v súčasnosti nainštalovaná expozícia plastiky. Vo výstavných priestoroch kaštieľa sú umiestnené stále expozície, konajú sa tu hudobno-dramatické a vzdelávacie programy. Stále expozície približujú najmä dielo Ladislava Mednyánszkeho, portrétnu tvorbu na Spiši, zbierky historickej knižnice a mobiliár zámku.</p>
+            </div>
+
+
+         </div>
+      </div>
+  </body>
+</html>
