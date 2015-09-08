@@ -27,4 +27,4 @@ phonegap  plugins add org.apache.cordova.device
 phonegap run ios
 ```
 
--> ![image](http://soundwalk.sng.sk/images/logo/logo_soundwalk.png) <-
+![image](http://soundwalk.sng.sk/images/logo/logo_soundwalk.png)
