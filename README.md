@@ -21,10 +21,20 @@ It requires Node.js
 
 ```
 sudo npm install -g phonegap
-phonegap  plugin add org.apache.cordova.media
-phonegap  plugin add org.apache.cordova.inappbrowser
-phonegap  plugins add org.apache.cordova.device
+phonegap  plugin add cordova-plugin-media
+phonegap  plugin add cordova-plugin-inappbrowser
+phonegap  plugins add cordova-plugin-device
 phonegap run ios
 ```
+
+## Usage
+
+To start a local server to run the app in your browser:
+
+'''
+phonegap serve
+'''
+
+To test on your phone you can download the nifty [PhoneGap Developer mobile app](http://docs.phonegap.com/getting-started/2-install-mobile-app/) and point it to the Server Address you see after `phonegap serve`.
 
 ![image](http://soundwalk.sng.sk/images/logo/logo_soundwalk.png)
