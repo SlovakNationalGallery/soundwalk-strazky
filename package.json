@@ -1,0 +1,29 @@
+{
+  "name": "sk.sng.strazky",
+  "version": "1.0.1",
+  "displayName": "Strážky",
+  "cordova": {
+    "platforms": [
+      "ios",
+      "android"
+    ],
+    "plugins": {
+      "cordova-android-support-gradle-release": {
+        "ANDROID_SUPPORT_VERSION": "27.+"
+      },
+      "cordova-plugin-device": {},
+      "cordova-plugin-media": {
+        "MICROPHONE_USAGE_DESCRIPTION": "",
+        "KEEP_AVAUDIOSESSION_ALWAYS_ACTIVE": "NO"
+      }
+    }
+  },
+  "dependencies": {
+    "cordova-android": "^8.0.0",
+    "cordova-android-support-gradle-release": "^3.0.0",
+    "cordova-ios": "~4.3.1",
+    "cordova-plugin-device": "2.0.2",
+    "cordova-plugin-file": "6.0.1",
+    "cordova-plugin-media": "5.0.2"
+  }
+}

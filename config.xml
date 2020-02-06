@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="sk.sng.strazky" version="1.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:gap="http://phonegap.com/ns/1.0">
+<widget id="sk.sng.strazky" version="1.0.2" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
     <name>Strážky</name>
     <description>
         Strážky SounWalk is audio guide in Strazky castle.
@@ -26,8 +26,7 @@
     <preference name="show-splash-screen-spinner" value="true" />
     <preference name="auto-hide-splash-screen" value="true" />
     <preference name="disable-cursor" value="false" />
-    <preference name="android-minSdkVersion" value="7" />
-    <preference name="android-installLocation" value="auto" />
+    <preference name="AndroidPersistentFileLocation" value="Compatibility" />
     <gap:plugin name="org.apache.cordova.battery-status" />
     <gap:plugin name="org.apache.cordova.console" />
     <gap:plugin name="org.apache.cordova.contacts" />
@@ -43,12 +42,19 @@
     <gap:plugin name="org.apache.cordova.media" />
     <gap:plugin name="org.apache.cordova.network-information" />
     <gap:plugin name="org.apache.cordova.splashscreen" />
-    <gap:plugin name="org.apache.cordova.vibration" />
+    <gap:plugin name="org.apache.cordova.vibration" /> -->
 
-    <icon gap:platform="android" gap:qualifier="ldpi" src="www/res/icon/android/icon-36-ldpi.png" />
+    <!-- <icon gap:platform="android" gap:qualifier="ldpi" src="www/res/icon/android/icon-36-ldpi.png" />
     <icon gap:platform="android" gap:qualifier="mdpi" src="www/res/icon/android/icon-48-mdpi.png" />
     <icon gap:platform="android" gap:qualifier="hdpi" src="www/res/icon/android/icon-72-hdpi.png" />
-    <icon gap:platform="android" gap:qualifier="xhdpi" src="www/res/icon/android/icon-96-xhdpi.png" />
+    <icon gap:platform="android" gap:qualifier="xhdpi" src="www/res/icon/android/icon-96-xhdpi.png" /> -->
+    <icon src="www/res/icon/android/icon-36-ldpi.png" platform="android" width="36" height="36" density="ldpi" />
+    <icon src="www/res/icon/android/icon-48-mdpi.png" platform="android" width="48" height="48" density="mdpi" />
+    <icon src="www/res/icon/android/icon-72-hdpi.png" platform="android" width="72" height="72" density="hdpi" />
+    <icon src="www/res/icon/android/icon-96-xhdpi.png" platform="android" width="96" height="96" density="xhdpi" />
+    <icon src="www/res/icon/android/icon-144-xxhdpi.png" platform="android" width="144" height="144" density="xxhdpi" />
+    <icon src="www/res/icon/android/icon-192-xxxhdpi.png" platform="android" width="192" height="192" density="xxxhdpi" />
+
 
     <access origin="*" />
     <engine name="ios" spec="~4.3.1" />

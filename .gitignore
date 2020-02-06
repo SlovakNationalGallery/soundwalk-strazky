@@ -2,3 +2,4 @@ hooks
 plugins
 .cordova
 platforms
+node_modules
