@@ -4,7 +4,6 @@
   "displayName": "Strážky",
   "cordova": {
     "platforms": [
-      "ios",
       "android"
     ],
     "plugins": {
@@ -12,18 +11,23 @@
         "ANDROID_SUPPORT_VERSION": "27.+"
       },
       "cordova-plugin-device": {},
+      "cordova-plugin-file": {},
       "cordova-plugin-media": {
-        "MICROPHONE_USAGE_DESCRIPTION": "",
         "KEEP_AVAUDIOSESSION_ALWAYS_ACTIVE": "NO"
-      }
+      },
+      "cordova-plugin-statusbar": {},
+      "cordova-plugin-wkwebview-file-xhr": {}
     }
   },
   "dependencies": {
     "cordova-android": "^8.0.0",
-    "cordova-android-support-gradle-release": "^3.0.0",
-    "cordova-ios": "~4.3.1",
-    "cordova-plugin-device": "2.0.2",
-    "cordova-plugin-file": "6.0.1",
-    "cordova-plugin-media": "5.0.2"
+    "cordova-android-support-gradle-release": "^3.0.0"
+  },
+  "devDependencies": {
+    "cordova-ios": "^6.2.0",
+    "cordova-plugin-device": "^2.0.3",
+    "cordova-plugin-file": "^6.0.2",
+    "cordova-plugin-media": "^5.0.3",
+    "cordova-plugin-wkwebview-file-xhr": "^3.0.0"
   }
 }

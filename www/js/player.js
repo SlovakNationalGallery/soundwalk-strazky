@@ -24,8 +24,6 @@ var Player = {
       );
    },
    playPause: function(path) {
-       console.log('test konzoly');
-      console.log('prijmam volanie');
       if (Player.media === null)
          Player.initMedia(path);
 
