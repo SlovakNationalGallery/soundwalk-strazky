@@ -622,3 +622,17 @@ p.cast { margin-top: 0.2em; }
 small, sub, sup { font-size: .83em }
 sub             { vertical-align: sub }
 sup             { vertical-align: super }
+
+/* iPhone X+ fix */
+.ui-header-fixed, .ui-header-fixed .ui-btn-left, .ui-header-fixed .ui-btn-right, .panelmenu .ui-panel-inner .ui-listview {
+    /* Status bar height on iOS 10 */
+    padding-top: 20px !important;
+    /* Status bar height on iOS 11.0 */
+    padding-top: constant(safe-area-inset-top) !important;
+    /* Status bar height on iOS 11+ */
+    padding-top: env(safe-area-inset-top) !important;
+}
+
+#home-page {
+  height: 100%;
+}
