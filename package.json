@@ -16,17 +16,19 @@
         "KEEP_AVAUDIOSESSION_ALWAYS_ACTIVE": "NO"
       },
       "cordova-plugin-statusbar": {},
-      "cordova-plugin-wkwebview-file-xhr": {}
+      "cordova-plugin-wkwebview-file-xhr": {},
+      "cordova-plugin-inappbrowser": {}
     }
   },
   "dependencies": {
-    "cordova-android": "^8.0.0",
     "cordova-android-support-gradle-release": "^3.0.0"
   },
   "devDependencies": {
+    "cordova-android": "^9.1.0",
     "cordova-ios": "^6.2.0",
     "cordova-plugin-device": "^2.0.3",
     "cordova-plugin-file": "^6.0.2",
+    "cordova-plugin-inappbrowser": "^5.0.0",
     "cordova-plugin-media": "^5.0.3",
     "cordova-plugin-wkwebview-file-xhr": "^3.0.0"
   }

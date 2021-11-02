@@ -70,7 +70,7 @@ function onDeviceReady() {
         e.preventDefault();
         var targetURL = $(this).attr("href");
 
-        window.open(targetURL, "_system");
+        cordova.InAppBrowser.open(targetURL, "_system");
     });
 
 
