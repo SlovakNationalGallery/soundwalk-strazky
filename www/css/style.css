@@ -509,6 +509,7 @@ html .ui-btn.ui-icon-radio-off:after {
   display: block;
   width: 26px;
   height: 26px;
+  margin-top: 6.5px;
 }
 .ui-btn-icon-left:focus:after, .ui-btn-icon-left:active:after {
   background-color:           rgba(53,61,44,.5) /*{global-icon-disc}*/;  
