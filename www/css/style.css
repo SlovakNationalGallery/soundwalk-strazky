@@ -9,6 +9,9 @@
 body  * {
   /*font-family: 'Fugue';*/
   font-weight: normal !important;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 body,
@@ -625,7 +628,7 @@ sub             { vertical-align: sub }
 sup             { vertical-align: super }
 
 /* iPhone X+ fix */
-.ui-header-fixed, .ui-header-fixed .ui-btn-left, .ui-header-fixed .ui-btn-right, .panelmenu .ui-panel-inner .ui-listview {
+.ui-header-fixed, .ui-header-fixed .ui-btn-left, .ui-header-fixed .ui-btn-right, .panelmenu .ui-panel-inner .ui-listview, .ui-btn-right {
     /* Status bar height on iOS 10 */
     padding-top: 20px !important;
     /* Status bar height on iOS 11.0 */
