@@ -1,13 +1,15 @@
-$(document).ready(function() {
-    document.addEventListener("deviceready", onDeviceReady, false);
-    // onDeviceReady(); //only for debuging
-});
-
 var audioMedia = null,
     audioTimer = null,
     duration = -1,
     is_paused = false,
     uzPulzoval = false;
+
+
+$(document).ready(function() {
+    document.addEventListener("deviceready", onDeviceReady, false);
+    // onDeviceReady(); //only for debuging
+});
+
 
 function onDeviceReady() {
     StatusBar.hide();
